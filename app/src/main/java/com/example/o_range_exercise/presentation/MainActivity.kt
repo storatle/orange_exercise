@@ -6,7 +6,9 @@
 
 package com.example.o_range_exercise.presentation
 
+import android.content.ContentValues.TAG
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -20,14 +22,36 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.health.services.client.HealthServices
+import androidx.health.services.client.data.ExerciseCapabilities
+import androidx.health.services.client.data.ExerciseType
+import androidx.lifecycle.lifecycleScope
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.example.o_range_exercise.R
 import com.example.o_range_exercise.presentation.theme.O_range_exerciseTheme
+import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.guava.await
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val healthClient = HealthServices.getClient(this)
+        val exerciseClient = healthClient.exerciseClient
+        lifecycleScope.launch {
+            val capabilities = exerciseClient.getCapabilitiesAsync().await()
+            if (ExerciseType.RUNNING in capabilities.supportedExerciseTypes) {
+                var runningCapabilities =
+                    capabilities.getExerciseTypeCapabilities(ExerciseType.RUNNING)
+                Log.d(TAG,"Running")
+            }
+            else {
+                Log.d(TAG, "No running")
+
+            }
+        }
+
         setContent {
             WearApp("Android")
         }
@@ -41,6 +65,7 @@ fun WearApp(greetingName: String) {
          * version of LazyColumn for wear devices with some added features. For more information,
          * see d.android.com/wear/compose.
          */
+
         Column(
             modifier = Modifier
                 .fillMaxSize()

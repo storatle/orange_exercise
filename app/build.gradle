@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'com.example.o_range_exercise'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.example.o_range_exercise"
         minSdk 30
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
         vectorDrawables {
@@ -61,4 +61,14 @@ dependencies {
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
+    implementation "androidx.health:health-services-client:1.0.0-beta01"
+
+    implementation("com.google.guava:guava:31.0.1-android")
+
+    // To use CallbackToFutureAdapter
+    implementation("androidx.concurrent:concurrent-futures:1.1.0")
+
+    // Kotlin
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.0")
+
 }
