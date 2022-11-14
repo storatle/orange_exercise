@@ -10,13 +10,16 @@ import android.content.ContentValues.TAG
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -114,6 +117,27 @@ fun WearApp(greetingName: String,
 @Composable
 fun Preparing(greetingName: String
     ) {
+    Log.d(TAG,"Preparing")
+    val coroutineScope = rememberCoroutineScope()
+    var serviceConnection = ExerciseServiceConnection()
+    val permissionLauncher =rememberLauncherForActivityResult(
+    ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+    if (result.all { it.value }) {
+        Log.d(TAG, "All required permissions granted")
+        coroutineScope.launch {
+            // Await binding of ExerciseService, since it takes a bit of time
+            // to instantiate the service.
+            serviceConnection.repeatWhenConnected {
+                checkNotNull(serviceConnection.exerciseService) {
+                    "Failed to achieve ExerciseService instance"
+                }.prepareExercise()
+            }
+        }
+    } else {
+        Log.d(TAG, "Not all required permissions granted")
+    }
+}
     Text(
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center,
