@@ -23,43 +23,67 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.health.services.client.HealthServices
-import androidx.health.services.client.data.ExerciseCapabilities
-import androidx.health.services.client.data.ExerciseType
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.example.o_range_exercise.R
 import com.example.o_range_exercise.presentation.theme.O_range_exerciseTheme
-import com.google.common.util.concurrent.ListenableFuture
-import kotlinx.coroutines.guava.await
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val healthClient = HealthServices.getClient(this)
-        val exerciseClient = healthClient.exerciseClient
+        var startDestination = "greeting"
+        var healthServicesManager = HealthServicesManager(healthClient,this)
         lifecycleScope.launch {
-            val capabilities = exerciseClient.getCapabilitiesAsync().await()
-            if (ExerciseType.RUNNING in capabilities.supportedExerciseTypes) {
-                var runningCapabilities =
-                    capabilities.getExerciseTypeCapabilities(ExerciseType.RUNNING)
-                Log.d(TAG,"Running")
-            }
-            else {
-                Log.d(TAG, "No running")
-
-            }
+                val destination = if (healthServicesManager.hasExerciseCapability()) {
+                    delay(5000)
+                    Log.d(TAG,"Running ok, go for preparing")
+                    startDestination = "preparing"
+           //         R.id.prepareFragment
+                } else {
+                    Log.d(TAG, "No running")
+                    startDestination = "greeting"
+             //       R.id.notAvailableFragment
+                }
+            setContent {
+                WearApp("Android",
+                    startDestination = startDestination)
+            }    //     findNavController().navigate(destination)
         }
 
-        setContent {
-            WearApp("Android")
-        }
+        //    val healthClient = HealthServices.getClient(this)
+    //    val exerciseClient = healthClient.exerciseClient
+    //    lifecycleScope.launch {
+    //        val capabilities = exerciseClient.getCapabilitiesAsync().await()
+    //        if (ExerciseType.RUNNING in capabilities.supportedExerciseTypes) {
+    //            var runningCapabilities =
+    //                capabilities.getExerciseTypeCapabilities(ExerciseType.RUNNING)
+    //            Log.d(TAG,"Running")
+    //            val supportsHeartRate = DataType.HEART_RATE_BPM in runningCapabilities.supportedDataTypes
+    //            Log.d(TAG,supportsHeartRate.toString())
+    //        }
+    //        else {
+    //            Log.d(TAG, "No running")
+
+    //        }
+    //    }
+
+
     }
 }
 
 @Composable
-fun WearApp(greetingName: String) {
+fun WearApp(greetingName: String,
+            navController: NavHostController = rememberNavController(),
+            startDestination: String
+) {
     O_range_exerciseTheme {
         /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
          * version of LazyColumn for wear devices with some added features. For more information,
@@ -72,11 +96,37 @@ fun WearApp(greetingName: String) {
                 .background(MaterialTheme.colors.background),
             verticalArrangement = Arrangement.Center
         ) {
-            Greeting(greetingName = greetingName)
+            NavHost(
+                navController = navController,
+                startDestination = startDestination
+            ) {
+                composable("greeting") {
+                    Greeting(greetingName = greetingName)
+                }
+                composable("preparing") {
+                    Preparing(greetingName = greetingName)
+                }
+            }
         }
     }
 }
 
+@Composable
+fun Preparing(greetingName: String
+    ) {
+    Text(
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Center,
+        color = MaterialTheme.colors.primary,
+        text = "Preparing for exercise"
+    )
+    Text(
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Center,
+        color = MaterialTheme.colors.secondary,
+        text = "Prep"
+    )
+}
 @Composable
 fun Greeting(greetingName: String) {
     Text(
@@ -96,5 +146,8 @@ fun Greeting(greetingName: String) {
 @Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
 fun DefaultPreview() {
-    WearApp("Preview Android")
+    WearApp("Preview Android",
+    startDestination = "greeting")
 }
+
+
